@@ -1,3 +1,35 @@
+Usage of my code:
+
+
+docker-compose up --build
+
+Open a new terminal and type:
+
+flutter pub get
+flutter run
+
+(Make sure you have a relatively new version of flutter installed)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Omnisent Fullstack Task:
 
 

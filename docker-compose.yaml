@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: omnisent-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: omnisent
+    ports:
+      - "5433:5432"
+    volumes:
+      # Automatically runs your schema on the first startup
+      - ./code/task1/tables.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: 
+      context: ./code/task2_2
+      dockerfile: backend.DOCKERFILE
+    container_name: omnisent-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Connects to the service name 'db' inside the docker network
+      DATABASE_URL: "postgresql://postgres:password@db:5432/omnisent"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

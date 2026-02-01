@@ -23,6 +23,7 @@ CREATE INDEX idx_audio_clips_sensor_id ON audio_clips(sensor_id);
 
 -- 2. LABEL DEFINITIONS
 -- A lookup table. Ensures we don't have "Drone", "drone", and "DRONE" mixed up.
+-- Actually had a think and for now ill just put in ids for sensor inactive, sensor showing safe,sensor showing suspicious activity and danger.
 -- Could in the future have even more things about 
 CREATE TABLE label_definitions (
     id SERIAL PRIMARY KEY,
@@ -30,6 +31,10 @@ CREATE TABLE label_definitions (
     description TEXT
 );
 
+
+
+-- Index for the slider: "Get me threats from 2pm to 3pm"
+CREATE INDEX idx_events_time ON detection_events(timestamp);
 
 -- 3. AUDIO ANNOTATIONS (The "Time-Series" Labels)
 -- Links a label to a specific TIME RANGE within a clip.
@@ -76,3 +81,59 @@ CREATE TABLE computed_features (
 
 -- Index to quickly check "DO we have this exact same feature already?" Because as we said, computing twice is dumb
 CREATE INDEX idx_features_lookup ON computed_features(audio_clip_id, feature_type);
+
+
+
+CREATE TABLE detection_events (
+    message_id VARCHAR(100) PRIMARY KEY,
+    sensor_id VARCHAR(50) NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+    
+
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    classification INTEGER NOT NULL, -- 0=Green, 1=Orange, 2=Red
+    prediction INTEGER DEFAULT 0,
+    amplitude FLOAT DEFAULT 0.0,
+    
+
+    synced_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX idx_events_time ON detection_events(timestamp);
+
+
+-- Combining the audio world with the detecetion event world
+CREATE OR REPLACE VIEW v_threats_replay AS
+SELECT 
+    de.message_id,
+    de.sensor_id,
+    de.timestamp,
+    de.classification,
+    de.latitude,
+    de.longitude,
+    
+
+    ac.id AS audio_clip_id,
+    ac.file_path AS audio_url,
+    
+    CASE WHEN ac.id IS NOT NULL THEN true ELSE false END AS has_audio,
+    
+    -- Where in the audio file did the event happen?
+    EXTRACT(EPOCH FROM (de.timestamp - ac.recorded_at)) AS audio_offset_seconds
+
+FROM detection_events de
+LEFT JOIN audio_clips ac 
+    ON de.sensor_id = ac.sensor_id 
+    AND de.timestamp >= ac.recorded_at 
+    AND de.timestamp < (ac.recorded_at + (ac.duration_seconds * interval '1 second'));
+
+
+
+
+
+INSERT INTO label_definitions (id, name, description) VALUES 
+    (-1, 'Status: Idle', 'Sensor is active but detecting nothing'),
+    ( 0, 'Status: Safe', 'Background noise only'),
+    ( 1, 'Threat: Suspicious', 'Unknown acoustic signature detected'),
+    ( 2, 'Threat: Hostile', 'Confirmed drone acoustic signature')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
