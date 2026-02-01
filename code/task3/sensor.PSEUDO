@@ -1,0 +1,50 @@
+
+my_hop_count = INFINITY   # How far am I from the user?
+parent_node = NULL        # Who do I send data to?
+msg_queue = []            # Buffer for messages waiting to be sent
+
+function run_sensor():
+    while True:
+        # --- PHASE 1: LISTEN (Default Mode) ---
+        # Listen briefly to save battery and check for traffic
+        packet = radio.listen(timeout=100ms)
+
+        if packet:
+            if packet.type == "BEACON":
+                # Routing Update: If this neighbor is closer to user than my current path
+                if packet.hops < my_hop_count:
+                    my_hop_count = packet.hops + 1
+                    parent_node = packet.sender_id
+                    # Pass the beacon on to nodes behind me
+                    queue_message("BEACON", hops=my_hop_count)
+
+            elif packet.type == "DATA":
+                 # Implicit ACK Check: Did my parent just forward the message I sent them?
+                 if packet.sender_id == parent_node and packet.original_msg_id in msg_queue:
+                     msg_queue.remove(packet.original_msg_id) # Validated! Remove from retry queue.
+                 
+                 # Forwarding: If I am the parent, I must relay this
+                 elif packet.destination_id == MY_ID:
+                     queue_message("DATA", content=packet.content)
+
+        # --- PHASE 2: DETECT ---
+        sensor_data = read_acoustic_sensor()
+        if sensor_data.is_threat():
+            queue_message("DATA", content=sensor_data)
+
+        # --- PHASE 3: SEND (Collision Avoidance) ---
+        if not msg_queue.is_empty():
+            
+            # The 1/x Strategy:
+            # If I have ~3 neighbors, I have a 33% chance to send now.
+            # If I lose the roll, I wait. This prevents 5 sensors sending at once.
+            neighbor_count = estimate_neighbors() 
+            chance_to_send = 1.0 / neighbor_count 
+
+            if random_float(0, 1) < chance_to_send:
+                # Send the oldest message in the queue
+                msg = msg_queue.peek()
+                radio.send_packet(msg, destination=parent_node) # Takes 600ms!
+            else:
+                # Backoff: Wait a random short time before trying loop again
+                sleep(random_ms(50, 200))

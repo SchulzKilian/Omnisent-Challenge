@@ -26,10 +26,6 @@ flutter run
 
 
 
-
-
-
-
 Omnisent Fullstack Task:
 
 

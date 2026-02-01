@@ -1,0 +1,20 @@
+# Runs on the User's Device
+CONST BEACON_INTERVAL = 10 seconds
+
+function run_receiver():
+    last_beacon_time = 0
+
+    while True:
+        current_time = get_time()
+
+        # 1. Send "I am here" signal every 10s
+        if (current_time - last_beacon_time) > BEACON_INTERVAL:
+            # Hops = 0 because I am the destination
+            radio.send_packet(type="BEACON", hops=0, sender_id="USER_NODE")
+            last_beacon_time = current_time
+
+        # 2. Listen for incoming alerts
+        packet = radio.listen(timeout=100ms)
+        
+        if packet and packet.type == "DATA":
+            display_alert_on_map(packet)
