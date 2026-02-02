@@ -1,44 +1,57 @@
-🚀 Getting Started
-Usage of my code:
+Here is the polished version in a single Markdown block for easy copying:
 
-Bash
+```markdown
+# Project Setup & Task Overview
 
+## 🚀 Usage Guide
+
+**1. Spin up the backend:**
+```bash
 docker-compose up --build
-Open a new terminal and type:
 
-Bash
+```
 
+**2. Launch the application:**
+Open a new terminal and run:
+
+```bash
 flutter pub get
 flutter run
-Note: Make sure you have a relatively new version of flutter installed.
 
-📋 Omnisent Fullstack Task
-Task 1: Database
-What do I need to store?
+```
 
-Where do I need to store it?
+> **Requirement:** Please ensure you have a relatively new version of Flutter installed.
 
-How do I have to optimally divide the tables?
+---
 
-What relationships are important between entities?
+## 📋 Omnisent Fullstack Task
 
-What tech stack is best?
+### Task 1: Database
 
-Task 2: Frontend
-What do I need to show?
+* **What** do I need to store?
+* **Where** do I need to store it?
+* **How** do I have to optimally divide the tables?
+* **What** relationships are important between entities?
+* **What** tech stack is best?
 
-How do I optimally query the backend?
+### Task 2: Frontend
 
-What functionalities does the user want?
+* **What** do I need to show?
+* **How** do I optimally query the backend?
+* **What** functionalities does the user want?
 
-Task 2.2: API
-How do I stay coherent with the created database scheme?
+### Task 2.2: API
 
-What framework do I use?
+* **How** do I stay coherent with the created database scheme?
+* **What** framework do I use?
+* **How** do I enforce idempotency and the other one?
 
-How do I enforce idempotency and the other one?
+### Task 3: Protocol
 
-Task 3: Protocol
-Whats important for a protocol like this?
+* **Whats** important for a protocol like this?
+* **How** do I strike a tradeoff between losing data and latency?
 
-How do I strike a tradeoff between losing data and latency?
+```
+
+
+```
